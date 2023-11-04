@@ -1,4 +1,4 @@
-//! # PRKORM: Table Procedural Macro
+//! # PRKORM
 
 //! The `Table` procedural macro that simplifies the creation of mysql queries for fields in your Rust structs. It comes with SELECT, INSERT, UPDATE, DELETE operations with JOINS, SUBQUERIES and other compled clauses. With this macro, you can generate these methods automatically, reducing boilerplate code and enhancing code readability.
 
@@ -23,7 +23,7 @@
 //!     use prkorm::Table;
 //!     ```
 
-//1 2. Apply the #[derive(Table)] attribute to your struct. This will           automatically generate select(), insert(), update() and delete() methods for all the struct including but not limited to table_primary_key(), table(), select_str(), select_`field_name*`() Then you can chain functions join function, where, having, limit, order by, group by etc based on the type of query you are opting for.
+//! 2. Apply the #[derive(Table)] attribute to your struct. This will           automatically generate select(), insert(), update() and delete() methods for all the struct including but not limited to table_primary_key(), table(), select_str(), select_`field_name*`() Then you can chain functions join function, where, having, limit, order by, group by etc based on the type of query you are opting for.
 //! Here is a quick example demonstrating the macro.
 //!     ```rust
 //!     #[derive(Table, Debug)]
