@@ -4,7 +4,7 @@ version = "0.2.0"
 edition = "2021"
 license = "MIT"
 description = "A procedural macro that simplifies the creation of mysql queries for fields in your Rust structs. It comes with SELECT, INSERT, UPDATE, DELETE operations with JOINS, SUBQUERIES and other compled clauses"
-repository = "https://github.com/prk-Jr/getset-macro.git"
+repository = "https://github.com/prk-Jr/prkorm.git"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 
