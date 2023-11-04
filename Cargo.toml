@@ -1,6 +1,6 @@
 [package]
 name = "prkorm"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 license = "MIT"
 description = "A procedural macro that simplifies the creation of mysql queries for fields in your Rust structs. It comes with SELECT, INSERT, UPDATE, DELETE operations with JOINS, SUBQUERIES and other compled clauses"

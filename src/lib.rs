@@ -403,7 +403,7 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
        
 
         #[derive(Debug, Clone, Default)]
-        struct #delete_builder {
+        pub struct #delete_builder {
             table: String,
         }
 
@@ -417,7 +417,7 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
 
 
         #[derive(Debug, Clone, Default)]
-        struct #update_builder {
+        pub struct #update_builder {
             selected: std::collections::HashMap<String, String>,
             table: String,
         }
@@ -440,7 +440,7 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
         }
 
         #[derive(Debug, Clone, Default)]
-        struct #insert_builder {
+        pub struct #insert_builder {
             selected: std::collections::HashMap<String, Vec<String>>,
             table: String,
             limit: Option<u32>,
@@ -502,7 +502,7 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
         }
 
         #[derive(Debug, Clone)]
-        struct #builder {
+        pub struct #builder {
             selected: String,
             joins: Vec<String>,
             primary_key: String,
