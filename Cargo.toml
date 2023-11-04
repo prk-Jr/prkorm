@@ -1,0 +1,17 @@
+[package]
+name = "prkorm"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "A procedural macro that simplifies the creation of mysql queries for fields in your Rust structs. It comes with SELECT, INSERT, UPDATE, DELETE operations with JOINS, SUBQUERIES and other compled clauses"
+repository = "https://github.com/prk-Jr/getset-macro.git"
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = "2.0.32"
+quote = "1.0.33"
+proc-macro2 = "1.0"
