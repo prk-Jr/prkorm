@@ -1,6 +1,6 @@
 # Table Procedural Macro
 
-The `Table` procedural macro that simplifies the creation of mysql queries for fields in your Rust structs. It comes with SELECT, INSERT, UPDATE, DELETE operations with JOINS, SUBQUERIES and other compled clauses. With this macro, you can generate these methods automatically, reducing boilerplate code and enhancing code readability.
+The `Table` procedural macro that simplifies the creation of SQL queries based on fields in your Rust structs. It comes with SELECT, INSERT, UPDATE, DELETE operations with JOINS, SUBQUERIES and other compled clauses. With this macro, you can generate these methods automatically, reducing boilerplate code and enhancing code readability.
 
 ## Table of Contents
 - [Usage](#usage)
