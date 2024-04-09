@@ -203,7 +203,7 @@ fn main() {
 
     ```sql
     SELECT 
-    (SELECT COUNT(*) FROM posts P WHERE P.user_id = "U.id") AS  
+    (SELECT COUNT(*) FROM posts P WHERE P.user_id = "U.id") AS total_post_count  
     FROM users U
     WHERE U.id = '1'
     ```
