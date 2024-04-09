@@ -1,6 +1,6 @@
 [package]
 name = "prkorm"
-version = "0.5.1"
+version = "0.5.2"
 edition = "2021"
 keywords = ["SQL", "database", "orm", "web-programming", "mysql"]
 categories = ["database", "web", "web-programming::http-server"]
