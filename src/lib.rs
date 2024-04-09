@@ -179,7 +179,7 @@ use syn::{
 
 
 
-#[proc_macro_derive(Table, attributes(table_name, primary_key))]
+#[proc_macro_derive(Table, attributes(table_name, primary_key, table_alias))]
 pub fn table_derive(input: TokenStream) -> TokenStream {
     // Parse the input tokens into a syntax tree.
     let ast = parse_macro_input!(input as DeriveInput);
@@ -206,6 +206,13 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
             false
         }
     });
+    let table_name_as_attr = ast.attrs.iter().find(|attr| {
+        if let Some(ident) = attr.path().get_ident() {
+            ident == "table_alias"
+        } else {
+            false
+        }
+    });
 
     // Extract the value of the "table_name" attribute, if present.
     let table: Option<String> = if let Some(attr) = table_name_attr {
@@ -216,6 +223,16 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
         }
     } else {
         None
+    };
+    // Extract the value of the "table_name" attribute, if present.
+    let table_as: Option<String> = if let Some(attr) = table_name_as_attr {
+        if let Ok(lit) = attr.parse_args::<LitStr>() {
+            Some(lit.value())
+        } else {
+            table.clone()
+        }
+    } else {
+        table.clone()
     };
 
     // Extract the "primary_key" attribute if present.
@@ -238,7 +255,12 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
         String::new()
     };
 
-    let table_dot =  match table.clone() { Some(name) => format!("{}.", name), None => format!("")};
+    let table_dot =  match table.clone() { Some(name) =>{
+            match table_as {
+                Some(ref alias) => format!("{}.", alias), 
+                None =>   format!("{}.", name)
+            }
+        }, None => format!("")};
 
     let field_names = fields
         .iter()
@@ -261,7 +283,8 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
             pub fn inner_join(mut self, table: &str,  primary_key: &str) -> Self {
                 let mut conditions: Vec<String> = Vec::new();
                 conditions.append(&mut self.joins);
-                conditions.push(format!("\nINNER JOIN {} ON {}.{} = {}.{}", table, table, primary_key, #table,  self.primary_key,));
+              let this_table =   &self.table_alias ;
+                conditions.push(format!("\nINNER JOIN {} ON {}.{} = {}.{}", table, table, primary_key, this_table,  self.primary_key,));
                 Self {
                     joins: conditions.clone(),
                     ..self
@@ -270,7 +293,8 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
             pub fn join(mut self,  table: &str, primary_key: &str,) -> Self {
                 let mut conditions: Vec<String> = Vec::new();
                 conditions.append(&mut self.joins);
-                conditions.push(format!("\nJOIN {} ON {}.{} = {}.{}", table, table, primary_key, #table, self.primary_key));
+                let this_table =   &self.table_alias ;
+                conditions.push(format!("\nJOIN {} ON {}.{} = {}.{}", table, table, primary_key, this_table, self.primary_key));
                 Self {
                     joins: conditions.clone(),
                     ..self
@@ -279,7 +303,8 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
             pub fn left_join(mut self, table: &str,  primary_key: &str,) -> Self {
                 let mut conditions: Vec<String> = Vec::new();
                 conditions.append(&mut self.joins);
-                conditions.push(format!("\nLEFT JOIN {} ON {}.{} = {}.{}", table, table, primary_key,  #table, self.primary_key));
+                let this_table =  &self.table_alias;
+                conditions.push(format!("\nLEFT JOIN {} ON {}.{} = {}.{}", table, table, primary_key,  this_table, self.primary_key));
                 Self {
                     joins: conditions.clone(),
                     ..self
@@ -288,7 +313,9 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
             pub fn right_join(mut self,  table: &str, primary_key: &str,) -> Self {
                 let mut conditions: Vec<String> = Vec::new();
                 conditions.append(&mut self.joins);
-                conditions.push(format!("\nRIGHT JOIN {} ON {}.{} = {}.{}", table, table, primary_key,  #table, self.primary_key));
+                let this_table =  &self.table_alias;
+                conditions.push(format!("\nRIGHT JOIN {} ON {}.{} = {}.{}", table, table, primary_key,  this_table, self.primary_key));
+               
                 Self {
                     joins: conditions.clone(),
                     ..self
@@ -297,7 +324,8 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
             pub fn full_join(mut self, table: &str,  primary_key: &str,) -> Self {
                 let mut conditions: Vec<String> = Vec::new();
                 conditions.append(&mut self.joins);
-                conditions.push(format!("\nRIGHT JOIN {} ON {}.{} = {}.{}", table, table, primary_key,  #table, self.primary_key));
+                let this_table =  &self.table_alias;
+                conditions.push(format!("\nRIGHT JOIN {} ON {}.{} = {}.{}", table, table, primary_key,  this_table, self.primary_key));
                 Self {
                     joins: conditions.clone(),
                     ..self
@@ -312,11 +340,17 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
        
 
         let field_name = field.ident.as_ref().unwrap();
-        let field_ty = &field.ty;
+        // let field_ty = &field.ty;
         let field_name_with_table =format!("{}{}", &table_dot, field_name);
         let field_name_without_table =format!("{}",field_name);
  
         let select_field_name = Ident::new(&format!("select_{}", field_name), field_name.span());
+        
+        let select_field_name_as = Ident::new(&format!("select_{}_as", field_name), field_name.span());
+        
+        let select_function_over_field_name = Ident::new(&format!("select_function_over_{}", field_name), field_name.span());
+       
+        let select_function_over_field_name_as = Ident::new(&format!("select_function_over_{}_as", field_name), field_name.span());
 
         let insert_into_col = Ident::new(&format!("insert_to_{}", field_name), field_name.span());
         
@@ -414,14 +448,13 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
                 }
             }
 
-            
-
-            
-
         });
 
         derived_functions.push(quote! {
+
+
             pub fn #select_field_name() -> #builder {
+              
                 #builder {
                     primary_key: Self::table_primary_key(),
                     limit: None,
@@ -431,12 +464,74 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
                     order_by: Vec::new(),
                     having: Vec::new(),
                     table: #table.into(),
+                    table_alias: #table_as.into(),
                     selected: format!("{}", #field_name_with_table),
+                }
+            }
+
+            pub fn #select_function_over_field_name( function: &str ) -> #builder {
+                #builder {
+                    primary_key: Self::table_primary_key(),
+                    limit: None,
+                    joins: Vec::new(),
+                    where_conditions: Vec::new(),
+                    group_by: Vec::new(),
+                    order_by: Vec::new(),
+                    having: Vec::new(),
+                    table: #table.into(),
+                    table_alias: #table_as.into(),
+                    selected: format!("{}({})", function.to_uppercase(),  #field_name_with_table),
+                }
+            }
+
+           
+
+            pub fn #select_function_over_field_name_as(mut self, function: &str , alias: &str ) -> #builder {
+                #builder {
+                    primary_key: Self::table_primary_key(),
+                    limit: None,
+                    joins: Vec::new(),
+                    where_conditions: Vec::new(),
+                    group_by: Vec::new(),
+                    order_by: Vec::new(),
+                    having: Vec::new(),
+                    table: #table.into(),
+                    table_alias: #table_as.into(),
+                    selected: format!("{}({}) AS {}", function.to_uppercase(),  #field_name_with_table, alias),
                 }
             }
         });
         
         field_functions.push(quote! {
+
+            pub fn #select_field_name(mut self) -> Self {
+                Self {
+                    selected: format!("{}, {}", self.selected, #field_name_with_table),
+                    ..self
+                }
+            }
+            
+            pub fn #select_field_name_as(mut self, alias: &str) -> Self {
+                Self {
+                    selected: format!("{}, ({}) AS {}", self.selected, #field_name_with_table, alias),
+                    ..self
+                }
+            }
+
+            pub fn #select_function_over_field_name(mut self, function: &str ) -> Self {
+                Self {
+                    selected: format!("{}, {}({})", self.selected, function.to_uppercase() ,#field_name_with_table ),
+                    ..self
+                }
+            }
+
+            pub fn #select_function_over_field_name_as(mut self, function: &str , alias: &str ) -> Self {
+                Self {
+                    selected: format!("{}, {}({}) AS {}", self.selected, function.to_uppercase() ,#field_name_with_table , alias),
+                    ..self
+                }
+            }
+
 
             pub fn #inner_join(mut self, table: &str,  key: &str) -> Self {
                 let mut conditions: Vec<String> = Vec::new();
@@ -679,6 +774,7 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
             joins: Vec<String>,
             primary_key: String,
             table: String,
+            table_alias: String,
             limit: Option<u32>,
             where_conditions: Vec<String>,
             group_by: Vec<String>,
@@ -735,6 +831,20 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
                 conditions.push(format!("{}", order));
                 Self {
                     order_by: conditions.clone(), 
+                    ..self
+                }
+            }
+
+            pub fn select_function_as(mut self, function: &str , over: &str , alias: &str ) -> Self {
+                Self {
+                    selected: format!("{}, {}({}) AS {}", self.selected, function.to_uppercase() ,over, alias),
+                    ..self
+                }
+            }
+
+            pub fn select_as(mut self, selection: &str, alias: &str) -> Self {
+                Self {
+                    selected: format!("{}, ({}) AS {}", self.selected, selection, alias),
                     ..self
                 }
             }
@@ -810,7 +920,11 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
                             having = format!("{} AND", having);
                         }
                     }
-                    format!("SELECT {} \nFROM {}{}{}{}{}{}{}", self.selected, self.table,joins, where_query, group_by, having,order_by, limit)
+                    let this_table =  match &self.table_alias == &self.table  {
+                        true => "", 
+                        false => &self.table_alias
+                    };
+                    format!("SELECT {} \nFROM {} {}{}{}{}{}{}{}", self.selected, self.table ,this_table ,joins, where_query, group_by, having,order_by, limit)
             }
         }
 
@@ -846,7 +960,67 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
                     group_by: Vec::new(),
                     having: Vec::new(),
                     table: #table.into(),
+                    table_alias: #table_as.into(),
                     selected: format!("{}", #field_names),
+                }
+            }
+
+            pub fn select_function_over_field_name( function: &str, over: &str ) -> #builder {
+                #builder {
+                    primary_key: Self::table_primary_key(),
+                    limit: None,
+                    joins: Vec::new(),
+                    where_conditions: Vec::new(),
+                    group_by: Vec::new(),
+                    order_by: Vec::new(),
+                    having: Vec::new(),
+                    table: #table.into(),
+                    table_alias: #table_as.into(),
+                    selected: format!("{}({})", function.to_uppercase(),  over),
+                }
+            }
+            pub fn select_function_over_field_name_as( function: &str, over: &str, alias: &str ) -> #builder {
+                #builder {
+                    primary_key: Self::table_primary_key(),
+                    limit: None,
+                    joins: Vec::new(),
+                    where_conditions: Vec::new(),
+                    group_by: Vec::new(),
+                    order_by: Vec::new(),
+                    having: Vec::new(),
+                    table: #table.into(),
+                    table_alias: #table_as.into(),
+                    selected: format!("{}({}) AS {}", function.to_uppercase(),  over, alias),
+                }
+            }
+
+            pub fn select_str(select: &str) -> #builder {
+                #builder {
+                    primary_key: Self::table_primary_key(),
+                    limit: None,
+                    order_by: Vec::new(),
+                    joins: Vec::new(),
+                    where_conditions: Vec::new(),
+                    group_by: Vec::new(),
+                    having: Vec::new(),
+                    table: #table.into(),
+                    table_alias: #table_as.into(),
+                    selected: format!("{}", select),
+                }
+            }
+
+            pub fn select_str_as(select: &str, alias: &str) -> #builder {
+                #builder {
+                    primary_key: Self::table_primary_key(),
+                    limit: None,
+                    order_by: Vec::new(),
+                    joins: Vec::new(),
+                    where_conditions: Vec::new(),
+                    group_by: Vec::new(),
+                    having: Vec::new(),
+                    table: #table.into(),
+                    table_alias: #table_as.into(),
+                    selected: format!("({}) AS {}", select, alias),
                 }
             }
 
@@ -858,6 +1032,7 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
             pub fn table_name(&self) -> &'static str {
                 #table
             }
+            
             pub fn table_primary_key() -> String {
                 format!("{}", #primary_key_var)
             }
