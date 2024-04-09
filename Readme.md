@@ -28,6 +28,7 @@ Here is a quick example demonstrating the macro.
     ```rust
     #[derive(Table, Debug)]
     #[table_name("orders")]
+    #[primary_key("id")]
     struct OrderModel {
         id: u32,
         customer_id: u32,
@@ -167,3 +168,44 @@ fn main() {
 
 
 }
+
+```rust
+#[derive(Table)]
+#[table_name("posts")]
+#[table_alias("P")]
+#[primary_key("id")]
+struct Post {
+    id: i32,
+    title: String,
+    user_id: i32,
+}
+
+#[derive(Table)]
+#[table_name("users")]
+#[table_alias("U")]
+struct User {
+    id: i32,
+    username: String,
+}
+
+fn main() {
+    let query = User::select_str_as(
+        &Post::select_function_over_field_name("COUNT", "*")
+            .where_user_id("U.id")
+            .build(),
+        "total_post_count",
+    )
+    .where_id(1)
+    .build();
+
+    println!("{query}");
+}
+
+    ```sql
+    SELECT 
+    (SELECT COUNT(*) FROM posts P WHERE P.user_id = "U.id") AS total_post_count  
+    FROM users U
+    WHERE U.id = '1'
+    ```
+
+```
