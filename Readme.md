@@ -191,7 +191,7 @@ struct User {
 fn main() {
     let query = User::select_str_as(
         &Post::select_function_over_field_name("COUNT", "*")
-            .where_user_id("U.id")
+            .where_user_id(User::id())
             .build(),
         "total_post_count",
     )
@@ -203,7 +203,7 @@ fn main() {
 
     ```sql
     SELECT 
-    (SELECT COUNT(*) FROM posts P WHERE P.user_id = "U.id") AS total_post_count  
+    (SELECT COUNT(*) FROM posts P WHERE P.user_id = U.id) AS total_post_count  
     FROM users U
     WHERE U.id = '1'
     ```
