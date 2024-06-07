@@ -383,7 +383,7 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
 
         delete_functions.push(quote! {
             pub fn #delete_where_col(mut self, value: impl ToString) -> String {
-                format!("DELETE FROM {} WHERE {} = {}", &self.table, #field_name_without_table, value.to_string())
+                format!("DELETE FROM {} WHERE {} = '{}'", &self.table, #field_name_without_table, value.to_string())
             }
         });
 
@@ -391,12 +391,12 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
               pub fn #update_where_col(mut self, value: impl ToString) -> String {
                 let mut set_values = String::new();
                 for (i, (k, v)) in self.selected.clone().into_iter().enumerate() {
-                    set_values = format!("{}{} = {}", set_values, k.clone(), v.clone());
+                    set_values = format!("{}{} = '{}'", set_values, k.clone(), v.clone());
                     if i + 1 != self.selected.len() {
                         set_values = format!("{}, ", set_values);
                     }
                 }
-                format!("UPDATE {} SET {} \nWHERE {} = {}", &self.table, set_values.clone(),  #field_name_without_table.clone(), value.to_string())
+                format!("UPDATE {} SET {} \nWHERE {} = '{}'", &self.table, set_values.clone(),  #field_name_without_table.clone(), value.to_string())
               }  
 
               pub fn #update_col_with_value(mut self, value: impl ToString) -> Self {
@@ -628,7 +628,7 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
             pub fn #having_function(mut self, #field_name: impl ToString) -> Self {
                 let mut conditions: Vec<String> = Vec::new();
                 conditions.append(&mut self.having);
-                conditions.push(format!("{} = {}",#field_name_with_table, #field_name.to_string() ));
+                conditions.push(format!("{} = '{}'",#field_name_with_table, #field_name.to_string() ));
                 Self {
                     having: conditions.clone(), 
                     ..self
@@ -650,7 +650,7 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
             pub fn #where_function_name(mut self, #field_name:impl ToString) -> Self {
                 let mut conditions: Vec<String> = Vec::new();
                 conditions.append(&mut self.where_conditions);
-                conditions.push(format!("{} = {}",#field_name_with_table,  #field_name.to_string() ));
+                conditions.push(format!("{} = '{}'",#field_name_with_table,  #field_name.to_string() ));
                 Self {
                     where_conditions: conditions.clone(), 
                     ..self
@@ -660,7 +660,7 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
                 // self.#field_name = update_with;
                 let mut conditions: Vec<String> = Vec::new();
                 conditions.append(&mut self.where_conditions);
-                conditions.push(format!("{} {} {}",#field_name_with_table, operator, #field_name.to_string() ));
+                conditions.push(format!("{} {} '{}'",#field_name_with_table, operator, #field_name.to_string() ));
                 Self {
                     where_conditions: conditions.clone(), 
                     ..self
@@ -700,7 +700,7 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
             pub fn where_str(mut self, where_condition: &str) -> String {
                 let mut set_values = String::new();
                 for (i, (k, v)) in self.selected.clone().into_iter().enumerate() {
-                    set_values = format!("{}{} = {}", set_values, k.clone(), v.clone());
+                    set_values = format!("{}{} = '{}'", set_values, k.clone(), v.clone());
                     if i + 1 != self.selected.len() {
                         set_values = format!("{}, ", set_values);
                     }
@@ -757,7 +757,7 @@ pub fn table_derive(input: TokenStream) -> TokenStream {
                  let item = results[i].clone();
                  let mut value = String::new();
                  for j in 0..item.len() {
-            value = format!("{}{}", value, item[j]);
+            value = format!("{}'{}'", value, item[j]);
             if j + 1 != item.len() {
                 value = format!("{}, ", value);
                      }
